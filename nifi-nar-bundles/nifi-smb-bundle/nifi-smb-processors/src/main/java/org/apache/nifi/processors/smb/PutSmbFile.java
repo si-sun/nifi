@@ -64,7 +64,7 @@ import java.util.EnumSet;
     "Use this processor instead of a cifs mounts if share access control is important.")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute="filename", description="The filename to use when writing the FlowFile to the network folder.")})
-public class PutSmbFiles extends AbstractProcessor {
+public class PutSmbFile extends AbstractProcessor {
     public static final String SHARE_ACCESS_NONE = "none";
     public static final String SHARE_ACCESS_READ = "read";
     public static final String SHARE_ACCESS_READDELETE = "read, delete";
@@ -240,7 +240,7 @@ public class PutSmbFiles extends AbstractProcessor {
         Set<SMB2ShareAccess> sharedAccess = Collections.<SMB2ShareAccess>emptySet();
         switch (context.getProperty(SHARE_ACCESS).getValue()) {
             case SHARE_ACCESS_NONE:
-                /* nothing, already initated as empty */
+                /* nothing, already initiated as empty */
                 break;
             case SHARE_ACCESS_READ:
                 sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ);

@@ -48,7 +48,7 @@ import java.io.IOException;
 import java.util.Set;
 
 
-public class PutSmbFilesTest {
+public class PutSmbFileTest {
 
     private TestRunner testRunner;
 
@@ -92,22 +92,22 @@ public class PutSmbFilesTest {
         )).thenReturn(smbfile);
         when(smbfile.getOutputStream()).thenReturn(baOutputStream);
 
-        testRunner.setProperty(PutSmbFiles.HOSTNAME, HOSTNAME);
-        testRunner.setProperty(PutSmbFiles.SHARE, SHARE);
-        testRunner.setProperty(PutSmbFiles.DIRECTORY, DIRECTORY);
-        testRunner.setProperty(PutSmbFiles.DOMAIN, DOMAIN);
-        testRunner.setProperty(PutSmbFiles.USERNAME, USERNAME);
-        testRunner.setProperty(PutSmbFiles.PASSWORD, PASSWORD);
+        testRunner.setProperty(PutSmbFile.HOSTNAME, HOSTNAME);
+        testRunner.setProperty(PutSmbFile.SHARE, SHARE);
+        testRunner.setProperty(PutSmbFile.DIRECTORY, DIRECTORY);
+        testRunner.setProperty(PutSmbFile.DOMAIN, DOMAIN);
+        testRunner.setProperty(PutSmbFile.USERNAME, USERNAME);
+        testRunner.setProperty(PutSmbFile.PASSWORD, PASSWORD);
 
 
-        PutSmbFiles putSmbFiles = (PutSmbFiles) testRunner.getProcessor();
-        putSmbFiles.initSmbClient(smbClient);
+        PutSmbFile PutSmbFile = (PutSmbFile) testRunner.getProcessor();
+        PutSmbFile.initSmbClient(smbClient);
     }
 
     private void testDirectoryCreation(String dirFlag, int times) throws IOException {
         when(diskShare.folderExists(DIRECTORY)).thenReturn(false);
 
-        testRunner.setProperty(PutSmbFiles.CREATE_DIRS, dirFlag);
+        testRunner.setProperty(PutSmbFile.CREATE_DIRS, dirFlag);
         testRunner.enqueue("data");
         testRunner.run();
 
@@ -131,7 +131,7 @@ public class PutSmbFilesTest {
 
     @Before
     public void init() throws IOException {
-        testRunner = TestRunners.newTestRunner(PutSmbFiles.class);
+        testRunner = TestRunners.newTestRunner(PutSmbFile.class);
         MockitoAnnotations.initMocks(this);
         setupSmbProcessor();
     }
@@ -150,7 +150,7 @@ public class PutSmbFilesTest {
 
     @Test
     public void testAnonymousAuth() throws IOException {
-        testRunner.removeProperty(PutSmbFiles.USERNAME);
+        testRunner.removeProperty(PutSmbFile.USERNAME);
         testRunner.enqueue("data");
         testRunner.run();
 
@@ -174,21 +174,21 @@ public class PutSmbFilesTest {
 
     @Test
     public void testFileShareNone() throws IOException {
-        testRunner.setProperty(PutSmbFiles.SHARE_ACCESS, PutSmbFiles.SHARE_ACCESS_NONE);
+        testRunner.setProperty(PutSmbFile.SHARE_ACCESS, PutSmbFile.SHARE_ACCESS_NONE);
         Set<SMB2ShareAccess> shareAccessSet = testOpenFileShareAccess();
         assertTrue(shareAccessSet.isEmpty());
     }
 
     @Test
     public void testFileShareRead() throws IOException {
-        testRunner.setProperty(PutSmbFiles.SHARE_ACCESS, PutSmbFiles.SHARE_ACCESS_READ);
+        testRunner.setProperty(PutSmbFile.SHARE_ACCESS, PutSmbFile.SHARE_ACCESS_READ);
         Set<SMB2ShareAccess> shareAccessSet = testOpenFileShareAccess();
         assertTrue(shareAccessSet.contains(SMB2ShareAccess.FILE_SHARE_READ));
     }
 
     @Test
     public void testFileShareReadWriteDelete() throws IOException {
-        testRunner.setProperty(PutSmbFiles.SHARE_ACCESS, PutSmbFiles.SHARE_ACCESS_READWRITEDELETE);
+        testRunner.setProperty(PutSmbFile.SHARE_ACCESS, PutSmbFile.SHARE_ACCESS_READWRITEDELETE);
         Set<SMB2ShareAccess> shareAccessSet = testOpenFileShareAccess();
         assertTrue(shareAccessSet.contains(SMB2ShareAccess.FILE_SHARE_READ));
         assertTrue(shareAccessSet.contains(SMB2ShareAccess.FILE_SHARE_WRITE));
@@ -197,16 +197,16 @@ public class PutSmbFilesTest {
 
     @Test
     public void testFileExistsFail() throws IOException {
-        testRunner.setProperty(PutSmbFiles.CONFLICT_RESOLUTION, PutSmbFiles.FAIL_RESOLUTION);
+        testRunner.setProperty(PutSmbFile.CONFLICT_RESOLUTION, PutSmbFile.FAIL_RESOLUTION);
         when(diskShare.fileExists(any(String.class))).thenReturn(true);
-        testRunner.assertAllFlowFilesTransferred(PutSmbFiles.REL_FAILURE);
+        testRunner.assertAllFlowFilesTransferred(PutSmbFile.REL_FAILURE);
     }
 
     @Test
     public void testFileExistsIgnore() throws IOException {
-        testRunner.setProperty(PutSmbFiles.CONFLICT_RESOLUTION, PutSmbFiles.IGNORE_RESOLUTION);
+        testRunner.setProperty(PutSmbFile.CONFLICT_RESOLUTION, PutSmbFile.IGNORE_RESOLUTION);
         when(diskShare.fileExists(any(String.class))).thenReturn(true);
-        testRunner.assertAllFlowFilesTransferred(PutSmbFiles.REL_SUCCESS);
+        testRunner.assertAllFlowFilesTransferred(PutSmbFile.REL_SUCCESS);
     }
 
     @Test
@@ -219,6 +219,6 @@ public class PutSmbFilesTest {
         testRunner.enqueue("3");
         testRunner.run();
 
-        testRunner.assertAllFlowFilesTransferred(PutSmbFiles.REL_FAILURE, 3);
+        testRunner.assertAllFlowFilesTransferred(PutSmbFile.REL_FAILURE, 3);
     }
 }
