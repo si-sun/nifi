@@ -62,7 +62,7 @@ import java.util.EnumSet;
 @Tags({"samba, smb, cifs, files, put"})
 @CapabilityDescription("Writes the contents of a FlowFile to a samba network location. " +
     "Use this processor instead of a cifs mounts if share access control is important.")
-@SeeAlso({})
+@SeeAlso({GetSmbFile.class})
 @ReadsAttributes({@ReadsAttribute(attribute="filename", description="The filename to use when writing the FlowFile to the network folder.")})
 public class PutSmbFile extends AbstractProcessor {
     public static final String SHARE_ACCESS_NONE = "none";
@@ -156,6 +156,7 @@ public class PutSmbFile extends AbstractProcessor {
     private Set<Relationship> relationships;
 
     private SMBClient smbClient = null;
+    private Set<SMB2ShareAccess> sharedAccess;
 
     @Override
     protected void init(final ProcessorInitializationContext context) {
@@ -195,13 +196,27 @@ public class PutSmbFile extends AbstractProcessor {
     @OnScheduled
     public void onScheduled(final ProcessContext context) {
 
+        switch (context.getProperty(SHARE_ACCESS).getValue()) {
+            case SHARE_ACCESS_NONE:
+                sharedAccess = Collections.<SMB2ShareAccess>emptySet();
+                break;
+            case SHARE_ACCESS_READ:
+                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ);
+                break;
+            case SHARE_ACCESS_READDELETE:
+                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ, SMB2ShareAccess.FILE_SHARE_DELETE);
+                break;
+            case SHARE_ACCESS_READWRITEDELETE:
+                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ, SMB2ShareAccess.FILE_SHARE_WRITE, SMB2ShareAccess.FILE_SHARE_DELETE);
+                break;
+        }
     }
 
-    public void initSmbClient() {
+    private void initSmbClient() {
         initSmbClient(new SMBClient());
     }
 
-    public void initSmbClient(SMBClient smbClient) {
+    void initSmbClient(SMBClient smbClient) {
         this.smbClient = smbClient;
     }
 
@@ -235,27 +250,9 @@ public class PutSmbFile extends AbstractProcessor {
             ac = AuthenticationContext.anonymous();
         }
 
-
-        // share access handling
-        Set<SMB2ShareAccess> sharedAccess = Collections.<SMB2ShareAccess>emptySet();
-        switch (context.getProperty(SHARE_ACCESS).getValue()) {
-            case SHARE_ACCESS_NONE:
-                /* nothing, already initiated as empty */
-                break;
-            case SHARE_ACCESS_READ:
-                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ);
-                break;
-            case SHARE_ACCESS_READDELETE:
-                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ, SMB2ShareAccess.FILE_SHARE_DELETE);
-                break;
-            case SHARE_ACCESS_READWRITEDELETE:
-                sharedAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ, SMB2ShareAccess.FILE_SHARE_WRITE, SMB2ShareAccess.FILE_SHARE_DELETE);
-                break;
-        }
-
         try (Connection connection = smbClient.connect(hostname);
             Session smbSession = connection.authenticate(ac);
-            DiskShare share = (DiskShare) smbSession.connectShare(shareName);) {
+            DiskShare share = (DiskShare) smbSession.connectShare(shareName)) {
 
             for (FlowFile flowFile : flowFiles) {
                 final String directory = context.getProperty(DIRECTORY).evaluateAttributeExpressions(flowFile).getValue();
