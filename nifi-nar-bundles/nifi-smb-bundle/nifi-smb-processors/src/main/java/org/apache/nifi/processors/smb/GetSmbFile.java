@@ -137,7 +137,7 @@ public class GetSmbFile extends AbstractProcessor {
 
     public static final PropertyDescriptor SHARE_ACCESS = new PropertyDescriptor.Builder()
             .name("Share Access Strategy")
-            .description("Indicates which shared access are granted on the file during the write. " +
+            .description("Indicates which shared access are granted on the file during the read. " +
                 "None is the most restrictive, but the safest setting to prevent corruption.")
             .required(true)
             .defaultValue(SHARE_ACCESS_NONE)
